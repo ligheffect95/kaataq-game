@@ -1,20 +1,16 @@
-// Simple Kaataq Game Implementation
+// Firebase-Enabled Kaataq Game Implementation
 class KaataqGame {
     constructor() {
+        // Local UI state (not synced)
         this.gameState = 'welcome';
-        this.roomCode = '';
-        this.players = [];
-        this.currentPlayer = null;
-        this.isHost = false;
-
-        // Game state
-        this.currentRound = 1;
-        this.currentHolderIndex = 0;
-        this.stickChoice = null;
-        this.playerVotes = {};
-        this.roundPhase = 'waiting';
+        this.currentPlayerId = null;
+        this.currentRoomId = null;
         this.timer = null;
         this.timeRemaining = 0;
+
+        // Firebase database reference
+        this.database = firebase.database();
+        this.currentRoomRef = null;
 
         this.config = {
             minPlayers: 3,
@@ -130,64 +126,144 @@ class KaataqGame {
         panel.classList.toggle('hidden');
     }
 
-    // Room management
+    // Room management with Firebase
     createRoom() {
-        this.roomCode = this.generateRoomCode();
-        this.isHost = true;
-
         const playerName = prompt('Enter your name:');
         if (!playerName) return;
 
-        this.currentPlayer = {
-            id: this.generatePlayerId(),
-            name: playerName,
-            score: 0,
-            color: this.colors[0]
+        this.currentRoomId = this.generateRoomCode();
+        this.currentPlayerId = this.generatePlayerId();
+
+        // Create room in Firebase
+        const roomData = {
+            roomCode: this.currentRoomId,
+            host: this.currentPlayerId,
+            gameStarted: false,
+            currentRound: 1,
+            currentHolderIndex: 0,
+            roundPhase: 'waiting',
+            stickChoice: null,
+            players: {
+                [this.currentPlayerId]: {
+                    id: this.currentPlayerId,
+                    name: playerName,
+                    score: 0,
+                    color: this.colors[0],
+                    isHost: true
+                }
+            },
+            votes: {},
+            createdAt: firebase.database.ServerValue.TIMESTAMP
         };
 
-        this.players = [this.currentPlayer];
-        this.updateLobby();
-        this.showScreen('lobby');
-        this.showToast('Room created! Share the code with others.', 'success');
+        this.currentRoomRef = this.database.ref('rooms/' + this.currentRoomId);
+        this.currentRoomRef.set(roomData).then(() => {
+            this.setupRoomListeners();
+            this.showScreen('lobby');
+            this.showToast('Room created! Share the code with others.', 'success');
+        }).catch((error) => {
+            this.showToast('Error creating room: ' + error.message, 'error');
+        });
     }
 
     joinRoom() {
-        const roomCode = document.getElementById('room-code-input').value;
-        const playerName = document.getElementById('player-name-input').value;
+        const roomCode = document.getElementById('room-code-input').value.trim();
+        const playerName = document.getElementById('player-name-input').value.trim();
 
         if (!roomCode || !playerName) {
             this.showToast('Please enter room code and your name.', 'error');
             return;
         }
 
-        // Simulate joining (in real implementation, this would be a server call)
-        this.roomCode = roomCode;
-        this.currentPlayer = {
-            id: this.generatePlayerId(),
-            name: playerName,
-            score: 0,
-            color: this.colors[this.players.length]
-        };
+        this.currentRoomId = roomCode;
+        this.currentPlayerId = this.generatePlayerId();
+        this.currentRoomRef = this.database.ref('rooms/' + roomCode);
 
-        this.players.push(this.currentPlayer);
-        this.updateLobby();
-        this.showScreen('lobby');
-        this.showToast('Joined room successfully!', 'success');
+        // Check if room exists
+        this.currentRoomRef.once('value').then((snapshot) => {
+            if (!snapshot.exists()) {
+                this.showToast('Room not found!', 'error');
+                return;
+            }
+
+            const roomData = snapshot.val();
+            if (roomData.gameStarted) {
+                this.showToast('Game already in progress!', 'error');
+                return;
+            }
+
+            const playerCount = roomData.players ? Object.keys(roomData.players).length : 0;
+            if (playerCount >= this.config.maxPlayers) {
+                this.showToast('Room is full!', 'error');
+                return;
+            }
+
+            // Add player to room
+            const playerRef = this.currentRoomRef.child('players/' + this.currentPlayerId);
+            playerRef.set({
+                id: this.currentPlayerId,
+                name: playerName,
+                score: 0,
+                color: this.colors[playerCount % this.colors.length],
+                isHost: false
+            }).then(() => {
+                this.setupRoomListeners();
+                this.showScreen('lobby');
+                this.showToast('Joined room successfully!', 'success');
+            });
+        }).catch((error) => {
+            this.showToast('Error joining room: ' + error.message, 'error');
+        });
     }
 
-    leaveRoom() {
-        this.resetGame();
-        this.showScreen('welcome');
+    setupRoomListeners() {
+        if (!this.currentRoomRef) return;
+
+        // Listen for room updates
+        this.currentRoomRef.on('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                this.showToast('Room no longer exists', 'error');
+                this.showScreen('welcome');
+                return;
+            }
+
+            const roomData = snapshot.val();
+            this.handleRoomUpdate(roomData);
+        });
     }
 
-    updateLobby() {
-        document.getElementById('room-code-display').textContent = this.roomCode;
-        document.getElementById('player-count').textContent = this.players.length;
+    handleRoomUpdate(roomData) {
+        // Update lobby if in lobby screen
+        if (this.gameState === 'lobby') {
+            this.updateLobby(roomData);
+        }
+
+        // Update game screen if game is active
+        if (roomData.gameStarted && this.gameState !== 'game-screen' && this.gameState !== 'end-screen') {
+            this.showScreen('game-screen');
+        }
+
+        if (this.gameState === 'game-screen') {
+            this.updateGameDisplay(roomData);
+        }
+
+        // Check for game end
+        if (roomData.gameEnded) {
+            this.showEndScreen(roomData);
+        }
+    }
+
+    updateLobby(roomData) {
+        document.getElementById('room-code-display').textContent = this.currentRoomId;
+
+        const players = roomData.players || {};
+        const playerCount = Object.keys(players).length;
+        document.getElementById('player-count').textContent = playerCount;
 
         const playersList = document.getElementById('players-list');
         playersList.innerHTML = '';
 
-        this.players.forEach(player => {
+        Object.values(players).forEach(player => {
             const card = document.createElement('div');
             card.className = 'player-card';
             card.style.borderLeftColor = player.color;
@@ -196,44 +272,87 @@ class KaataqGame {
                 <div class="player-avatar" style="background-color: ${player.color}">
                     ${player.name.charAt(0).toUpperCase()}
                 </div>
-                <div class="player-name">${player.name}</div>
+                <div class="player-name">${player.name}${player.isHost ? ' (Host)' : ''}</div>
             `;
 
             playersList.appendChild(card);
         });
 
         const startBtn = document.getElementById('start-game-btn');
-        startBtn.disabled = this.players.length < this.config.minPlayers || !this.isHost;
+        const isHost = players[this.currentPlayerId] && players[this.currentPlayerId].isHost;
+        startBtn.disabled = playerCount < this.config.minPlayers || !isHost;
     }
 
-    // Game logic
-    startGame() {
-        this.currentRound = 1;
-        this.currentHolderIndex = 0;
-        this.showScreen('game-screen');
-        this.startRound();
-    }
-
-    startRound() {
-        this.roundPhase = 'choosing';
-        this.stickChoice = null;
-        this.playerVotes = {};
-
-        this.updateGameDisplay();
-
-        if (this.isCurrentPlayerHolder()) {
-            this.showHolderView();
-        } else {
-            this.showWaitingView();
+    leaveRoom() {
+        if (this.currentRoomRef && this.currentPlayerId) {
+            // Remove player from room
+            this.currentRoomRef.child('players/' + this.currentPlayerId).remove();
+            this.currentRoomRef.off(); // Remove listeners
         }
+        this.resetLocalState();
+        this.showScreen('welcome');
     }
 
-    isCurrentPlayerHolder() {
-        return this.players[this.currentHolderIndex].id === this.currentPlayer.id;
+    resetLocalState() {
+        this.currentRoomId = null;
+        this.currentPlayerId = null;
+        this.currentRoomRef = null;
+        this.clearTimer();
     }
 
-    getCurrentHolder() {
-        return this.players[this.currentHolderIndex];
+    // Game logic with Firebase
+    startGame() {
+        if (!this.currentRoomRef) return;
+
+        this.currentRoomRef.update({
+            gameStarted: true,
+            currentRound: 1,
+            currentHolderIndex: 0,
+            roundPhase: 'choosing'
+        });
+    }
+
+    updateGameDisplay(roomData) {
+        const players = roomData.players || {};
+        const playersArray = Object.values(players);
+
+        document.getElementById('current-round').textContent = roomData.currentRound || 1;
+
+        const currentHolder = playersArray[roomData.currentHolderIndex || 0];
+        if (currentHolder) {
+            document.getElementById('holder-name').textContent = currentHolder.name;
+        }
+
+        const phaseTexts = {
+            'choosing': 'is choosing which hand holds the wee...',
+            'voting': 'Vote for which hand has the wee!',
+            'results': 'Round complete!'
+        };
+
+        document.getElementById('holder-instruction').textContent = 
+            phaseTexts[roomData.roundPhase] || '';
+
+        // Show appropriate view based on phase and player role
+        const isCurrentHolder = currentHolder && currentHolder.id === this.currentPlayerId;
+
+        if (roomData.roundPhase === 'choosing') {
+            if (isCurrentHolder) {
+                this.showHolderView();
+            } else {
+                this.showWaitingView();
+            }
+        } else if (roomData.roundPhase === 'voting') {
+            if (!isCurrentHolder) {
+                this.showVotingView();
+                this.startTimer(this.config.votingTime);
+            } else {
+                this.showWaitingView();
+            }
+        } else if (roomData.roundPhase === 'results') {
+            this.showResultsView(roomData);
+        }
+
+        this.updateScoreboard(playersArray);
     }
 
     showHolderView() {
@@ -252,157 +371,134 @@ class KaataqGame {
         document.getElementById('holder-view').classList.add('hidden');
         document.getElementById('voting-view').classList.remove('hidden');
         document.getElementById('results-view').classList.add('hidden');
+    }
 
-        this.startTimer(this.config.votingTime);
+    showResultsView(roomData) {
+        document.getElementById('holder-view').classList.add('hidden');
+        document.getElementById('voting-view').classList.add('hidden');
+        document.getElementById('results-view').classList.remove('hidden');
+
+        const handName = roomData.stickChoice === 'left' ? 'Camiq (Left)' : 'Taliq (Right)';
+        document.getElementById('correct-hand').textContent = handName;
+
+        this.updateVoteSummary(roomData.votes || {});
+        this.clearTimer();
     }
 
     makeStickChoice(choice) {
-        this.stickChoice = choice;
+        if (!this.currentRoomRef) return;
+
         document.querySelectorAll('.hand-btn[data-choice]').forEach(btn => {
             btn.classList.remove('selected');
         });
         document.querySelector(`[data-choice="${choice}"]`).classList.add('selected');
 
-        // Auto-proceed after choice
+        // Update Firebase with choice and move to voting phase
         setTimeout(() => {
-            this.roundPhase = 'voting';
-            this.updateGameDisplay();
-            this.showVotingView();
+            this.currentRoomRef.update({
+                stickChoice: choice,
+                roundPhase: 'voting',
+                votes: {} // Clear previous votes
+            });
         }, 1000);
     }
 
     castVote(vote) {
-        this.playerVotes[this.currentPlayer.id] = vote;
+        if (!this.currentRoomRef || !this.currentPlayerId) return;
+
         document.querySelectorAll('.hand-btn[data-vote]').forEach(btn => {
             btn.classList.remove('selected');
         });
         document.querySelector(`[data-vote="${vote}"]`).classList.add('selected');
 
-        // Check if everyone has voted
-        const votingPlayers = this.players.filter(p => p.id !== this.getCurrentHolder().id);
-        if (Object.keys(this.playerVotes).length === votingPlayers.length) {
-            this.showResults();
-        }
+        // Submit vote to Firebase
+        this.currentRoomRef.child('votes/' + this.currentPlayerId).set(vote);
+
+        // Check if all players have voted
+        this.currentRoomRef.once('value').then((snapshot) => {
+            const roomData = snapshot.val();
+            const players = roomData.players || {};
+            const votes = roomData.votes || {};
+
+            // Count non-holder players
+            const playersArray = Object.values(players);
+            const currentHolder = playersArray[roomData.currentHolderIndex || 0];
+            const votingPlayers = playersArray.filter(p => p.id !== currentHolder.id);
+
+            if (Object.keys(votes).length === votingPlayers.length) {
+                this.calculateAndShowResults(roomData);
+            }
+        });
     }
 
-    showResults() {
-        this.roundPhase = 'results';
-        this.clearTimer();
+    calculateAndShowResults(roomData) {
+        const players = roomData.players || {};
+        const votes = roomData.votes || {};
+        const correctHand = roomData.stickChoice;
+        const playersArray = Object.values(players);
+        const currentHolder = playersArray[roomData.currentHolderIndex || 0];
 
-        document.getElementById('holder-view').classList.add('hidden');
-        document.getElementById('voting-view').classList.add('hidden');
-        document.getElementById('results-view').classList.remove('hidden');
-
-        this.calculateScores();
-        this.updateGameDisplay();
-    }
-
-    calculateScores() {
-        const correctHand = this.stickChoice;
-        const holder = this.getCurrentHolder();
         let correctGuesses = 0;
+        const updatedPlayers = { ...players };
 
-        // Count correct guesses
-        Object.values(this.playerVotes).forEach(vote => {
+        // Count correct guesses and award points
+        Object.entries(votes).forEach(([playerId, vote]) => {
             if (vote === correctHand) {
                 correctGuesses++;
+                updatedPlayers[playerId].score += 1;
             }
         });
 
-        // Award points
-        this.players.forEach(player => {
-            if (player.id === holder.id) {
-                // Holder gets points if less than half guess correctly
-                if (correctGuesses < Object.keys(this.playerVotes).length / 2) {
-                    player.score += 1;
-                }
-            } else if (this.playerVotes[player.id] === correctHand) {
-                // Correct guessers get points
-                player.score += 1;
-            }
-        });
-    }
-
-    updateGameDisplay() {
-        document.getElementById('current-round').textContent = this.currentRound;
-
-        const holder = this.getCurrentHolder();
-        document.getElementById('holder-name').textContent = holder.name;
-
-        const phaseTexts = {
-            'choosing': 'is choosing which hand holds the wee...',
-            'voting': 'Vote for which hand has the wee!',
-            'results': 'Round complete!'
-        };
-
-        document.getElementById('holder-instruction').textContent = phaseTexts[this.roundPhase] || '';
-
-        if (this.roundPhase === 'results') {
-            const handName = this.stickChoice === 'left' ? 'Camiq (Left)' : 'Taliq (Right)';
-            document.getElementById('correct-hand').textContent = handName;
-
-            // Update vote summary
-            this.updateVoteSummary();
+        // Award points to holder if less than half guessed correctly
+        if (correctGuesses < Object.keys(votes).length / 2) {
+            updatedPlayers[currentHolder.id].score += 1;
         }
 
-        this.updateScoreboard();
-    }
-
-    updateVoteSummary() {
-        const summary = document.getElementById('vote-summary');
-        summary.innerHTML = '';
-
-        const leftVotes = Object.values(this.playerVotes).filter(v => v === 'left').length;
-        const rightVotes = Object.values(this.playerVotes).filter(v => v === 'right').length;
-
-        summary.innerHTML = `
-            <div class="vote-item">
-                <span>Camiq (Left):</span>
-                <span>${leftVotes} votes</span>
-            </div>
-            <div class="vote-item">
-                <span>Taliq (Right):</span>
-                <span>${rightVotes} votes</span>
-            </div>
-        `;
-    }
-
-    updateScoreboard() {
-        const scoresList = document.getElementById('scores-list');
-        scoresList.innerHTML = '';
-
-        // Sort players by score
-        const sortedPlayers = [...this.players].sort((a, b) => b.score - a.score);
-
-        sortedPlayers.forEach(player => {
-            const item = document.createElement('div');
-            item.className = 'score-item';
-            item.innerHTML = `
-                <span>${player.name}</span>
-                <span class="player-score">${player.score}</span>
-            `;
-            scoresList.appendChild(item);
+        // Update Firebase with new scores and results phase
+        this.currentRoomRef.update({
+            players: updatedPlayers,
+            roundPhase: 'results'
         });
     }
 
     nextRound() {
-        this.currentRound++;
-        this.currentHolderIndex = (this.currentHolderIndex + 1) % this.players.length;
+        if (!this.currentRoomRef) return;
 
-        // Check if game should end
-        if (this.currentRound > this.players.length) {
-            this.endGame();
-        } else {
-            this.startRound();
-        }
+        this.currentRoomRef.once('value').then((snapshot) => {
+            const roomData = snapshot.val();
+            const playersArray = Object.values(roomData.players || {});
+            const nextRound = (roomData.currentRound || 1) + 1;
+            const nextHolderIndex = ((roomData.currentHolderIndex || 0) + 1) % playersArray.length;
+
+            // Check if game should end (everyone has been holder once)
+            if (nextRound > playersArray.length) {
+                this.endGame(roomData);
+            } else {
+                this.currentRoomRef.update({
+                    currentRound: nextRound,
+                    currentHolderIndex: nextHolderIndex,
+                    roundPhase: 'choosing',
+                    stickChoice: null,
+                    votes: {}
+                });
+            }
+        });
     }
 
-    endGame() {
-        // Find winner
-        const winner = this.players.reduce((prev, current) => 
+    endGame(roomData) {
+        const playersArray = Object.values(roomData.players || {});
+        const winner = playersArray.reduce((prev, current) => 
             prev.score > current.score ? prev : current
         );
 
+        this.currentRoomRef.update({
+            gameEnded: true,
+            winner: winner
+        });
+    }
+
+    showEndScreen(roomData) {
+        const winner = roomData.winner;
         document.getElementById('winner-display').textContent = 
             `${winner.name} wins with ${winner.score} points!`;
 
@@ -410,7 +506,9 @@ class KaataqGame {
         const finalScores = document.getElementById('final-scores');
         finalScores.innerHTML = '';
 
-        const sortedPlayers = [...this.players].sort((a, b) => b.score - a.score);
+        const playersArray = Object.values(roomData.players || {});
+        const sortedPlayers = playersArray.sort((a, b) => b.score - a.score);
+
         sortedPlayers.forEach((player, index) => {
             const item = document.createElement('div');
             item.className = 'score-item';
@@ -424,6 +522,71 @@ class KaataqGame {
         this.showScreen('end-screen');
     }
 
+    updateVoteSummary(votes) {
+        const summary = document.getElementById('vote-summary');
+        summary.innerHTML = '';
+
+        const leftVotes = Object.values(votes).filter(v => v === 'left').length;
+        const rightVotes = Object.values(votes).filter(v => v === 'right').length;
+
+        summary.innerHTML = `
+            <div class="vote-item">
+                <span>Camiq (Left):</span>
+                <span>${leftVotes} votes</span>
+            </div>
+            <div class="vote-item">
+                <span>Taliq (Right):</span>
+                <span>${rightVotes} votes</span>
+            </div>
+        `;
+    }
+
+    updateScoreboard(playersArray) {
+        const scoresList = document.getElementById('scores-list');
+        scoresList.innerHTML = '';
+
+        // Sort players by score
+        const sortedPlayers = [...playersArray].sort((a, b) => b.score - a.score);
+
+        sortedPlayers.forEach(player => {
+            const item = document.createElement('div');
+            item.className = 'score-item';
+            item.innerHTML = `
+                <span>${player.name}</span>
+                <span class="player-score">${player.score}</span>
+            `;
+            scoresList.appendChild(item);
+        });
+    }
+
+    resetGame() {
+        if (!this.currentRoomRef) return;
+
+        this.currentRoomRef.once('value').then((snapshot) => {
+            const roomData = snapshot.val();
+            const updatedPlayers = {};
+
+            // Reset all player scores
+            Object.entries(roomData.players || {}).forEach(([id, player]) => {
+                updatedPlayers[id] = { ...player, score: 0 };
+            });
+
+            this.currentRoomRef.update({
+                gameStarted: false,
+                gameEnded: false,
+                currentRound: 1,
+                currentHolderIndex: 0,
+                roundPhase: 'waiting',
+                stickChoice: null,
+                votes: {},
+                players: updatedPlayers,
+                winner: null
+            });
+
+            this.showScreen('lobby');
+        });
+    }
+
     startTimer(seconds) {
         this.clearTimer();
         this.timeRemaining = seconds;
@@ -435,9 +598,6 @@ class KaataqGame {
 
             if (this.timeRemaining <= 0) {
                 this.clearTimer();
-                if (this.roundPhase === 'voting') {
-                    this.showResults();
-                }
             }
         }, 1000);
     }
@@ -456,18 +616,6 @@ class KaataqGame {
         } else {
             display.textContent = '';
         }
-    }
-
-    resetGame() {
-        this.clearTimer();
-        this.players.forEach(player => {
-            player.score = 0;
-        });
-        this.currentRound = 1;
-        this.currentHolderIndex = 0;
-        this.roundPhase = 'waiting';
-        this.playerVotes = {};
-        this.stickChoice = null;
     }
 }
 

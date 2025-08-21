@@ -60,6 +60,12 @@ h3 {
     color: #e8e8e8;
 }
 
+h4 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #d4af37;
+}
+
 .subtitle {
     text-align: center;
     font-size: 1.1em;
@@ -87,7 +93,7 @@ h3 {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background: linear-gradient(135deg, #b8941f, #9e7a1a);
     transform: translateY(-2px);
 }
@@ -148,6 +154,11 @@ input:focus {
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
+    width: 100%;
+}
+
+.info-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .info-panel {
@@ -162,7 +173,23 @@ input:focus {
     display: none;
 }
 
+.terminology {
+    margin-top: 15px;
+}
+
+.terminology ul {
+    margin-left: 20px;
+}
+
+.terminology li {
+    margin-bottom: 5px;
+}
+
 /* Players list */
+.players-section {
+    margin-bottom: 20px;
+}
+
 .players-list {
     display: grid;
     gap: 10px;
@@ -257,11 +284,16 @@ input:focus {
 .stick-choice, .vote-choice {
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
 
 .hand-label {
     font-size: 16px;
     font-weight: bold;
+}
+
+.holder-controls, .voting-controls {
+    margin-bottom: 30px;
 }
 
 /* Results */
@@ -281,6 +313,7 @@ input:focus {
     display: flex;
     justify-content: space-between;
     margin: 5px 0;
+    padding: 5px 0;
 }
 
 /* Scoreboard */
@@ -318,6 +351,10 @@ input:focus {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.final-scores {
+    margin: 20px 0;
+}
+
 /* Utility classes */
 .hidden {
     display: none !important;
@@ -339,6 +376,7 @@ input:focus {
     margin-bottom: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     animation: slideIn 0.3s ease;
+    max-width: 300px;
 }
 
 .toast.success {
@@ -347,6 +385,10 @@ input:focus {
 
 .toast.error {
     border-left: 4px solid #f44336;
+}
+
+.toast.info {
+    border-left: 4px solid #2196F3;
 }
 
 @keyframes slideIn {
@@ -360,7 +402,7 @@ input:focus {
     }
 }
 
-/* Responsive */
+/* Responsive design */
 @media (max-width: 480px) {
     body {
         padding: 5px;
@@ -384,4 +426,38 @@ input:focus {
         padding: 10px 16px;
         font-size: 14px;
     }
+
+    .hand-btn {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .stick-choice, .vote-choice {
+        flex-direction: column;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Room info styling */
+.room-info {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 2px dashed rgba(212, 175, 55, 0.5);
+}
+
+.room-info h2 {
+    margin-bottom: 5px;
+}
+
+.room-info p {
+    color: #c8c8c8;
+    font-size: 0.9em;
 }

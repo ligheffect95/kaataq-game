@@ -67,13 +67,13 @@ class KaataqGame {
         // Game controls
         document.querySelectorAll('.hand-btn[data-choice]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.makeStickChoice(e.target.dataset.choice);
+                this.makeStickChoice(e.target.closest('.hand-btn').dataset.choice);
             });
         });
 
         document.querySelectorAll('.hand-btn[data-vote]').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.castVote(e.target.dataset.vote);
+                this.castVote(e.target.closest('.hand-btn').dataset.vote);
             });
         });
 
@@ -117,7 +117,9 @@ class KaataqGame {
         container.appendChild(toast);
 
         setTimeout(() => {
-            toast.remove();
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
         }, 3000);
     }
 
@@ -129,7 +131,7 @@ class KaataqGame {
     // Room management with Firebase
     createRoom() {
         const playerName = prompt('Enter your name:');
-        if (!playerName) return;
+        if (!playerName || !playerName.trim()) return;
 
         this.currentRoomId = this.generateRoomCode();
         this.currentPlayerId = this.generatePlayerId();
@@ -146,7 +148,7 @@ class KaataqGame {
             players: {
                 [this.currentPlayerId]: {
                     id: this.currentPlayerId,
-                    name: playerName,
+                    name: playerName.trim(),
                     score: 0,
                     color: this.colors[0],
                     isHost: true
@@ -162,6 +164,7 @@ class KaataqGame {
             this.showScreen('lobby');
             this.showToast('Room created! Share the code with others.', 'success');
         }).catch((error) => {
+            console.error('Error creating room:', error);
             this.showToast('Error creating room: ' + error.message, 'error');
         });
     }
@@ -210,8 +213,12 @@ class KaataqGame {
                 this.setupRoomListeners();
                 this.showScreen('lobby');
                 this.showToast('Joined room successfully!', 'success');
+            }).catch((error) => {
+                console.error('Error joining room:', error);
+                this.showToast('Error joining room: ' + error.message, 'error');
             });
         }).catch((error) => {
+            console.error('Error checking room:', error);
             this.showToast('Error joining room: ' + error.message, 'error');
         });
     }
@@ -378,20 +385,25 @@ class KaataqGame {
         document.getElementById('voting-view').classList.add('hidden');
         document.getElementById('results-view').classList.remove('hidden');
 
-        const handName = roomData.stickChoice === 'left' ? 'Camiq (Left)' : 'Taliq (Right)';
-        document.getElementById('correct-hand').textContent = handName;
+        if (roomData.stickChoice) {
+            const handName = roomData.stickChoice === 'left' ? 'Camiq (Left)' : 'Taliq (Right)';
+            document.getElementById('correct-hand').textContent = handName;
+        }
 
         this.updateVoteSummary(roomData.votes || {});
         this.clearTimer();
     }
 
     makeStickChoice(choice) {
-        if (!this.currentRoomRef) return;
+        if (!this.currentRoomRef || !choice) return;
 
         document.querySelectorAll('.hand-btn[data-choice]').forEach(btn => {
             btn.classList.remove('selected');
         });
-        document.querySelector(`[data-choice="${choice}"]`).classList.add('selected');
+        const selectedBtn = document.querySelector(`[data-choice="${choice}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.add('selected');
+        }
 
         // Update Firebase with choice and move to voting phase
         setTimeout(() => {
@@ -404,12 +416,15 @@ class KaataqGame {
     }
 
     castVote(vote) {
-        if (!this.currentRoomRef || !this.currentPlayerId) return;
+        if (!this.currentRoomRef || !this.currentPlayerId || !vote) return;
 
         document.querySelectorAll('.hand-btn[data-vote]').forEach(btn => {
             btn.classList.remove('selected');
         });
-        document.querySelector(`[data-vote="${vote}"]`).classList.add('selected');
+        const selectedBtn = document.querySelector(`[data-vote="${vote}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.add('selected');
+        }
 
         // Submit vote to Firebase
         this.currentRoomRef.child('votes/' + this.currentPlayerId).set(vote);
@@ -428,6 +443,8 @@ class KaataqGame {
             if (Object.keys(votes).length === votingPlayers.length) {
                 this.calculateAndShowResults(roomData);
             }
+        }).catch((error) => {
+            console.error('Error checking votes:', error);
         });
     }
 
@@ -482,6 +499,8 @@ class KaataqGame {
                     votes: {}
                 });
             }
+        }).catch((error) => {
+            console.error('Error advancing round:', error);
         });
     }
 
@@ -499,8 +518,10 @@ class KaataqGame {
 
     showEndScreen(roomData) {
         const winner = roomData.winner;
-        document.getElementById('winner-display').textContent = 
-            `${winner.name} wins with ${winner.score} points!`;
+        if (winner) {
+            document.getElementById('winner-display').textContent = 
+                `${winner.name} wins with ${winner.score} points!`;
+        }
 
         // Show final scores
         const finalScores = document.getElementById('final-scores');
@@ -524,6 +545,8 @@ class KaataqGame {
 
     updateVoteSummary(votes) {
         const summary = document.getElementById('vote-summary');
+        if (!summary) return;
+
         summary.innerHTML = '';
 
         const leftVotes = Object.values(votes).filter(v => v === 'left').length;
@@ -543,6 +566,8 @@ class KaataqGame {
 
     updateScoreboard(playersArray) {
         const scoresList = document.getElementById('scores-list');
+        if (!scoresList) return;
+
         scoresList.innerHTML = '';
 
         // Sort players by score
@@ -564,6 +589,8 @@ class KaataqGame {
 
         this.currentRoomRef.once('value').then((snapshot) => {
             const roomData = snapshot.val();
+            if (!roomData) return;
+
             const updatedPlayers = {};
 
             // Reset all player scores
@@ -584,6 +611,8 @@ class KaataqGame {
             });
 
             this.showScreen('lobby');
+        }).catch((error) => {
+            console.error('Error resetting game:', error);
         });
     }
 
@@ -611,15 +640,21 @@ class KaataqGame {
 
     updateTimerDisplay() {
         const display = document.getElementById('timer-display');
-        if (this.timeRemaining > 0) {
-            display.textContent = `${this.timeRemaining}s`;
-        } else {
-            display.textContent = '';
+        if (display) {
+            if (this.timeRemaining > 0) {
+                display.textContent = `${this.timeRemaining}s`;
+            } else {
+                display.textContent = '';
+            }
         }
     }
 }
 
 // Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const game = new KaataqGame();
+    try {
+        const game = new KaataqGame();
+    } catch (error) {
+        console.error('Error initializing game:', error);
+    }
 });

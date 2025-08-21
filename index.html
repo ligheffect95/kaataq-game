@@ -137,7 +137,34 @@
 
     <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
+l
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<!-- Firebase Realtime Database (for multiplayer sync) -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
+<!-- Optionally, Analytics if you want -->
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js"></script>
 
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8dd1dr3ONL0idGOwzyzZ5plCjTG2vLEI",
+    authDomain: "kaataq-game.firebaseapp.com",
+    databaseURL: "https://kaataq-game-default-rtdb.firebaseio.com/",
+    projectId: "kaataq-game",
+    storageBucket: "kaataq-game.appspot.com",
+    messagingSenderId: "602351160973",
+    appId: "1:602351160973:web:c15a4831c5a7d56d149cc4",
+    measurementId: "G-V47NYCZ8BQ"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  // If using analytics (optional)
+  // const analytics = firebase.analytics();
+  const database = firebase.database();
+</script>
+    
     <script src="game.js"></script>
 </body>
 </html>

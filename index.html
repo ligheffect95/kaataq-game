@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaataq - Traditional Alutiiq Game</title>
+    <title>Kaataq – Traditional Alutiiq Game</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,15 +14,13 @@
                 <h1>Kaataq</h1>
                 <p class="subtitle">Traditional Alutiiq Stick Game</p>
             </header>
-
             <div class="cultural-info">
                 <button id="info-btn" class="info-toggle">About Kaataq</button>
                 <div id="info-panel" class="info-panel hidden">
                     <h3>Cultural Context</h3>
-                    <p>Kaataq is a traditional Alutiiq guessing game played with two sticks - one marked (wee) and one unmarked (dip). Traditionally played by men before Lent, it involves bluffing, psychology, and social interaction.</p>
+                    <p>Kaataq is a traditional Alutiiq game played with two sticks – one marked (wee) and one unmarked (dip). Traditionally played by men before Lent, involving bluffing, psychology, and social interaction.</p>
                 </div>
             </div>
-
             <div class="actions">
                 <button id="create-btn" class="btn btn-primary">Create Room</button>
                 <button id="join-btn" class="btn btn-secondary">Join Room</button>
@@ -52,12 +50,10 @@
                 <h2>Room: <span id="room-code-display"></span></h2>
                 <p>Share this code with others to join</p>
             </div>
-
             <div class="players-section">
                 <h3>Players (<span id="player-count">0</span>)</h3>
                 <div id="players-list" class="players-list"></div>
             </div>
-
             <div class="actions" id="lobby-actions">
                 <button id="start-game-btn" class="btn btn-primary" disabled>Start Game</button>
                 <button id="leave-btn" class="btn btn-secondary">Leave Room</button>
@@ -73,38 +69,34 @@
                 </div>
                 <div id="timer-display" class="timer"></div>
             </div>
-
             <div class="current-holder">
                 <h3 id="holder-name">Player Name</h3>
                 <p id="holder-instruction">is choosing which hand holds the wee...</p>
             </div>
-
             <!-- Stick Holder View -->
             <div id="holder-view" class="holder-controls hidden">
                 <h3>Choose your hand:</h3>
                 <div class="stick-choice">
-                    <button id="left-hand" class="hand-btn" data-choice="left">
+                    <button class="hand-btn" data-choice="left">
                         <span class="hand-label">Camiq (Left)</span>
                     </button>
-                    <button id="right-hand" class="hand-btn" data-choice="right">
+                    <button class="hand-btn" data-choice="right">
                         <span class="hand-label">Taliq (Right)</span>
                     </button>
                 </div>
             </div>
-
             <!-- Voting View -->
             <div id="voting-view" class="voting-controls hidden">
                 <h3>Which hand has the wee?</h3>
                 <div class="vote-choice">
-                    <button id="vote-left" class="hand-btn" data-vote="left">
+                    <button class="hand-btn" data-vote="left">
                         <span class="hand-label">Camiq (Left)</span>
                     </button>
-                    <button id="vote-right" class="hand-btn" data-vote="right">
+                    <button class="hand-btn" data-vote="right">
                         <span class="hand-label">Taliq (Right)</span>
                     </button>
                 </div>
             </div>
-
             <!-- Results View -->
             <div id="results-view" class="results hidden">
                 <div class="reveal">
@@ -113,7 +105,6 @@
                 </div>
                 <button id="next-round-btn" class="btn btn-primary">Next Round</button>
             </div>
-
             <!-- Scoreboard -->
             <div class="scoreboard">
                 <h4>Scores</h4>
@@ -134,37 +125,15 @@
             </div>
         </div>
     </div>
-
     <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
-l
-<!-- Firebase App (the core Firebase SDK) -->
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-<!-- Firebase Realtime Database (for multiplayer sync) -->
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
-<!-- Optionally, Analytics if you want -->
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js"></script>
 
-<script>
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyC8dd1dr3ONL0idGOwzyzZ5plCjTG2vLEI",
-    authDomain: "kaataq-game.firebaseapp.com",
-    databaseURL: "https://kaataq-game-default-rtdb.firebaseio.com/",
-    projectId: "kaataq-game",
-    storageBucket: "kaataq-game.appspot.com",
-    messagingSenderId: "602351160973",
-    appId: "1:602351160973:web:c15a4831c5a7d56d149cc4",
-    measurementId: "G-V47NYCZ8BQ"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  // If using analytics (optional)
-  // const analytics = firebase.analytics();
-  const database = firebase.database();
-</script>
-    
-    <script src="game.js"></script>
-</body>
-</html>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
+    <!-- Firebase config and initialization -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyC8dd1dr3ONL0idGOwzyzZ5plCjTG2vLEI",
+        authDomain: "kaataq-game.firebaseapp.com",
+        database

@@ -17,10 +17,43 @@
                 <em>Mobile-friendly. Multiplayer. Cultural education.</em></p>
             </header>
             <div class="about-section cultural-info">
-                <h2>About the Game</h2>
-                <p><strong>Kaataq</strong> is a traditional Alutiiq guessing game involving psychological gameplay and social interaction...</p>
-                <!-- [features, how to play, cultural context as above] -->
-                <div class="actions">
+                <button id="info-btn" class="btn btn-secondary">About Kaataq</button>
+                <div id="info-panel" class="info-panel hidden">
+                    <h2>About the Game</h2>
+                    <p><strong>Kaataq</strong> is a traditional Alutiiq guessing game involving psychological gameplay and social interaction. Players take turns hiding a marked stick (<strong>wee</strong>) in one of their hands, while others try to guess which hand contains it. This digital version preserves the cultural essence while adding modern multiplayer functionality.</p>
+                    <h3>Features</h3>
+                    <ul>
+                        <li><strong>Real multiplayer:</strong> Cross-device gameplay using Firebase Realtime Database</li>
+                        <li><strong>Room-based system:</strong> Create or join games with 4-digit codes</li>
+                        <li><strong>Cultural education:</strong> Integrated info about Alutiiq traditions/language</li>
+                        <li><strong>Mobile-responsive:</strong> Optimized for phones and tablets</li>
+                        <li><strong>Real-time sync:</strong> All players see actions instantly</li>
+                        <li><strong>Authentic terminology:</strong> Uses Alutiiq words (Camiq, Taliq, wee, dip)</li>
+                    </ul>
+                    <h3>How to Play</h3>
+                    <ol>
+                        <li>Create or join a room using a 4-digit code</li>
+                        <li>Wait for players (3–8 required)</li>
+                        <li>Take turns as Stick Holder (choose which hand hides the "wee")</li>
+                        <li>Other players vote on which hand they think has the marked stick</li>
+                        <li>Score points for correct guesses and successful bluffing</li>
+                        <li>Game ends after everyone has been the Stick Holder once</li>
+                    </ol>
+                    <h3>Cultural Context</h3>
+                    <p>This game is based on traditional Alutiiq gaming practices. Cultural information is sourced from the Alutiiq Museum and Archaeological Repository to ensure authenticity and respect for the traditions.</p>
+                    <ul>
+                        <li><strong>Kaataq:</strong> The stick game itself</li>
+                        <li><strong>Wee:</strong> The marked stick</li>
+                        <li><strong>Dip:</strong> The unmarked stick</li>
+                        <li><strong>Camiq:</strong> Left hand</li>
+                        <li><strong>Taliq:</strong> Right hand</li>
+                    </ul>
+                    <div class="personal-note" style="margin-top: 1em; font-style: italic; color: #b8860b;">
+                        <strong>Note:</strong> I am not Alutiiq, I am an Orthodox Christian who has a deep appreciation for their culture.<br>
+                        This project is meant both as a tool for cultural exchange and to honor the spirit of Alutiiq tradition through play.
+                    </div>
+                </div>
+                <div class="actions" style="margin-top: 2em;">
                     <button id="create-btn" class="btn btn-primary">Create Room</button>
                     <button id="join-btn" class="btn btn-secondary">Join Room</button>
                 </div>

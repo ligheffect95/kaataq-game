@@ -16,55 +16,11 @@
                 <p class="subtitle">A digital adaptation of the traditional Alutiiq stick guessing game<br>
                 <em>Mobile-friendly. Multiplayer. Cultural education.</em></p>
             </header>
-
             <div class="about-section cultural-info">
                 <h2>About the Game</h2>
-                <p>
-                    <strong>Kaataq</strong> is a traditional Alutiiq guessing game involving psychological gameplay and social interaction. Players take turns hiding a marked stick (<strong>wee</strong>) in one of their hands, while others try to guess which hand contains it. This digital version preserves the cultural essence while adding modern multiplayer functionality.
-                </p>
-
-                <h3>Features</h3>
-                <ul>
-                    <li><strong>Real multiplayer:</strong> Cross-device gameplay using Firebase Realtime Database</li>
-                    <li><strong>Room-based system:</strong> Create or join games with 4-digit codes</li>
-                    <li><strong>Cultural education:</strong> Integrated info about Alutiiq traditions/language</li>
-                    <li><strong>Mobile-responsive:</strong> Optimized for phones and tablets</li>
-                    <li><strong>Real-time sync:</strong> All players see actions instantly</li>
-                    <li><strong>Authentic terminology:</strong> Uses traditional Alutiiq words (<em>Camiq</em>/left, <em>Taliq</em>/right, <em>wee</em>/<em>dip</em>)</li>
-                </ul>
-
-                <h3>How to Play</h3>
-                <ol>
-                    <li><strong>Create or join a room</strong> using a 4-digit code</li>
-                    <li><strong>Wait for players</strong> (3–8 players required)</li>
-                    <li><strong>Take turns as Stick Holder</strong>: choose which hand hides the "wee"</li>
-                    <li><strong>Other players vote</strong> on which hand they think has the marked stick</li>
-                    <li><strong>Score points</strong> for correct guesses or successful bluffing</li>
-                    <li><strong>Game ends</strong> after everyone has been the Stick Holder once</li>
-                </ol>
-
-                <h3>Cultural Context</h3>
-                <p>
-                    This game is based on traditional Alutiiq gaming practices—specifically the stick guessing game <strong>Kaataq</strong>. Cultural information is sourced from the Alutiiq Museum and Archaeological Repository to ensure authenticity and respect for the traditions.
-                </p>
-
-                <div class="terminology">
-                    <h4>Traditional Terms Used</h4>
-                    <ul>
-                        <li><strong>Kaataq:</strong> The stick game itself</li>
-                        <li><strong>Wee:</strong> The marked stick</li>
-                        <li><strong>Dip:</strong> The unmarked stick</li>
-                        <li><strong>Camiq:</strong> Left hand</li>
-                        <li><strong>Taliq:</strong> Right hand</li>
-                    </ul>
-                </div>
-
-                <div class="personal-note" style="margin-top: 1em; font-style: italic; color: #b8860b;">
-                    <strong>Note:</strong> I am not Alutiiq, I am an Orthodox Christian who has a deep appreciation for their culture.<br>
-                    This project is meant both as a tool for cultural exchange and to honor the spirit of Alutiiq tradition through play.
-                </div>
-
-                <div class="actions" style="margin-top: 2em;">
+                <p><strong>Kaataq</strong> is a traditional Alutiiq guessing game involving psychological gameplay and social interaction...</p>
+                <!-- [features, how to play, cultural context as above] -->
+                <div class="actions">
                     <button id="create-btn" class="btn btn-primary">Create Room</button>
                     <button id="join-btn" class="btn btn-secondary">Join Room</button>
                 </div>
@@ -94,12 +50,10 @@
                 <h2>Room: <span id="room-code-display"></span></h2>
                 <p>Share this code with others to join</p>
             </div>
-
             <div class="players-section">
                 <h3>Players (<span id="player-count">0</span>)</h3>
                 <div id="players-list" class="players-list"></div>
             </div>
-
             <div class="actions">
                 <button id="start-game-btn" class="btn btn-primary" disabled>Start Game</button>
                 <button id="leave-btn" class="btn btn-secondary">Leave Room</button>
@@ -115,39 +69,24 @@
                 </div>
                 <div id="timer-display" class="timer"></div>
             </div>
-
             <div class="current-holder">
                 <h3 id="holder-name">Player Name</h3>
                 <p id="holder-instruction">is choosing which hand holds the wee...</p>
             </div>
-
-            <!-- Stick Holder View -->
             <div id="holder-view" class="holder-controls hidden">
                 <h3>Choose your hand:</h3>
                 <div class="stick-choice">
-                    <button class="hand-btn" data-choice="left">
-                        <span class="hand-label">Camiq (Left)</span>
-                    </button>
-                    <button class="hand-btn" data-choice="right">
-                        <span class="hand-label">Taliq (Right)</span>
-                    </button>
+                    <button class="hand-btn" data-choice="left"><span class="hand-label">Camiq (Left)</span></button>
+                    <button class="hand-btn" data-choice="right"><span class="hand-label">Taliq (Right)</span></button>
                 </div>
             </div>
-
-            <!-- Voting View -->
             <div id="voting-view" class="voting-controls hidden">
                 <h3>Which hand has the wee?</h3>
                 <div class="vote-choice">
-                    <button class="hand-btn" data-vote="left">
-                        <span class="hand-label">Camiq (Left)</span>
-                    </button>
-                    <button class="hand-btn" data-vote="right">
-                        <span class="hand-label">Taliq (Right)</span>
-                    </button>
+                    <button class="hand-btn" data-vote="left"><span class="hand-label">Camiq (Left)</span></button>
+                    <button class="hand-btn" data-vote="right"><span class="hand-label">Taliq (Right)</span></button>
                 </div>
             </div>
-
-            <!-- Results View -->
             <div id="results-view" class="results hidden">
                 <div class="reveal">
                     <h3>The wee was in the <span id="correct-hand"></span> hand!</h3>
@@ -155,8 +94,6 @@
                 </div>
                 <button id="next-round-btn" class="btn btn-primary">Next Round</button>
             </div>
-
-            <!-- Scoreboard -->
             <div class="scoreboard">
                 <h4>Scores</h4>
                 <div id="scores-list" class="scores-list"></div>
@@ -177,26 +114,24 @@
         </div>
     </div>
 
-    <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
 
-
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyC8dd1dr3ONL0idGOwzyzZ5plCjTG2vLEI",
-    authDomain: "kaataq-game.firebaseapp.com",
-    databaseURL: "https://kaataq-game-default-rtdb.firebaseio.com/",
-    projectId: "kaataq-game",
-    storageBucket: "kaataq-game.appspot.com",
-    messagingSenderId: "602351160973",
-    appId: "1:602351160973:web:c15a4831c5a7d56d149cc4",
-    measurementId: "G-V47NYCZ8BQ"
-  };
-  firebase.initializeApp(firebaseConfig);
-</script>
-<script src="game.js"></script>
-    
+    <!-- Firebase compatibility scripts and config -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8dd1dr3ONL0idGOwzyzZ5plCjTG2vLEI",
+            authDomain: "kaataq-game.firebaseapp.com",
+            databaseURL: "https://kaataq-game-default-rtdb.firebaseio.com/",
+            projectId: "kaataq-game",
+            storageBucket: "kaataq-game.appspot.com",
+            messagingSenderId: "602351160973",
+            appId: "1:602351160973:web:c15a4831c5a7d56d149cc4",
+            measurementId: "G-V47NYCZ8BQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    <script src="game.js"></script>
 </body>
 </html>

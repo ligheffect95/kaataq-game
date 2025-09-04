@@ -1,6 +1,6 @@
 # Kaataq - Lenten Alutiiq Game
 
-A digital adaptation of the traditional Alutiiq stick guessing game, designed as a mobile-friendly multiplayer experience for conference icebreakers and cultural education.
+A digital adaptation of the traditional Alutiiq stick guessing game, designed as a mobile-friendly multiplayer experience for my IASA SEAPAVAA 2025 conference/workshop icebreaker and broader cultural education.
 
 ## About the Game
 
@@ -26,16 +26,16 @@ Kaataq is a traditional Alutiiq guessing game involving psychological gameplay a
 
 ## Cultural Context
 
-This game is based on traditional Alutiiq gaming practices, specifically the stick guessing game Kaataq. The cultural information is sourced from the Alutiiq Museum and Archaeological Repository to ensure authenticity and respect for the traditions.
+This game is based on traditional Alutiiq/Sugpiaq gaming practices, specifically the stick guessing game Kaataq which was brought from the southeast via the fur trade, according to the Alutiiq Museum. The cultural information is sourced from the Alutiiq Museum and Archaeological Repository to ensure authenticity and respect for the traditions.
 
 **Traditional Terms Used:**
 - **Kaataq**: The stick game itself
-- **Wee**: The marked stick
+- **Wee**: The marked stick (Still unsure if this and dip are sugt'stun words or were borrowed)
 - **Dip**: The unmarked stick  
 - **Camiq**: Left hand
 - **Taliq**: Right hand
 
-I am not Alutiiq, I am an Orthodox Christian who has a deep appreciation for their culture.
+I am not Alutiiq, I am an Orthodox Christian who was raised with a deep appreciation for their culture, and their contributions to my religion.
 
 
 ## Technical Setup
